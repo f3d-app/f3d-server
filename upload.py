@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, send_from_directory
+from flask import Blueprint, request, jsonify, send_from_directory, current_app
 import hashlib
 import os
 from pathlib import Path
@@ -11,11 +11,11 @@ UPLOAD_TOKEN = os.getenv("UPLOAD_TOKEN")
 
 @bp.route("/upload", methods=["POST"])
 def upload():
-    token = request.headers.get("Authorization", "")
-
-    # For now we disable token verification
-    # if token != f"Bearer {UPLOAD_TOKEN}":
-    #    return jsonify(error="Unauthorized"), 401
+    # Token verification is enabled with the --auth argument
+    if current_app.config.get("UPLOAD_AUTH"):
+        token = request.headers.get("Authorization", "")
+        if token != f"Bearer {UPLOAD_TOKEN}":
+            return jsonify(error="Unauthorized"), 401
 
     data = request.get_data()
 
