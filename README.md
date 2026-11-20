@@ -8,7 +8,7 @@ Implements a `POST` request to `/upload` endpoint used to copy PNG files to a gi
 The SHA256 hash of the file is returned and if the file already exists, the file is only touched to update its modification time.
 
 > [!NOTE]
-> Only .png files are accepted aith a maximum size of 300KB
+> Only .png files are accepted with a maximum size of 300KB
 
 A symmetric `GET` request to `/upload/<SHA256>` endpoint can be used to retrieve the image.
 
