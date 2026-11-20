@@ -11,7 +11,7 @@ on:
       sha:
         description: 'Commit SHA to deploy'
         required: true
-        default: 'origin/main'
+        default: 'main'
 
 permissions:
   contents: read
@@ -21,6 +21,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.sha || github.sha }}
+
       - name: Configure SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -29,15 +34,12 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-
-      - name: Get SHA for workflow dispatch events
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: echo "SHA=${{ github.event.inputs.sha }}" >> $GITHUB_ENV
-
-      - name: Get SHA for push events
-        if: ${{ github.event_name == 'push' }}
-        run: echo "SHA=${{ github.sha }}" >> $GITHUB_ENV
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
 
       - name: Deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          ssh ${{ secrets.SSH_HOST }} /opt/sweetbot/deploy.sh "$SHA"
+          SHA=$(git rev-parse HEAD)
+          ssh "$SSH_HOST" bash -s -- "$SHA" < deploy.sh
